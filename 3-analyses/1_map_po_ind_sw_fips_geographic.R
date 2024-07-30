@@ -122,11 +122,11 @@ map_anomppt <- ggplot() +
   scale_fill_manual(
     values = c(
       "0" = "lightgrey",
-      "1-5" = viridisLite::viridis(5)[1],
-      "6-10" = viridisLite::viridis(5)[2], 
-      "11-15" = viridisLite::viridis(5)[3], 
-      "16-20" = viridisLite::viridis(5)[4], 
-      "21+" = viridisLite::viridis(5)[5], 
+      "1-5" = viridisLite::plasma(5)[1],
+      "6-10" = viridisLite::plasma(5)[2], 
+      "11-15" = viridisLite::plasma(5)[3], 
+      "16-20" = viridisLite::plasma(5)[4], 
+      "21+" = viridisLite::plasma(5)[5], 
       "Not calculated" = "white"
     ),
     name = "Cumulative days"
@@ -201,12 +201,12 @@ map_anomcold <- ggplot() +
   scale_fill_manual(
     values = c(
       "0" = "lightgrey",
-      "1" = viridisLite::viridis(6)[1],
-      "2" = viridisLite::viridis(6)[2],
-      "3" = viridisLite::viridis(6)[3],
-      "4" = viridisLite::viridis(6)[4],
-      "5" = viridisLite::viridis(6)[5],
-      "6+" = viridisLite::viridis(6)[6],
+      "1" = viridisLite::plasma(6)[1],
+      "2" = viridisLite::plasma(6)[2],
+      "3" = viridisLite::plasma(6)[3],
+      "4" = viridisLite::plasma(6)[4],
+      "5" = viridisLite::plasma(6)[5],
+      "6+" = viridisLite::plasma(6)[6],
       "Not calculated" = "white"
     ),
     name = "Cumulative days"
@@ -288,11 +288,11 @@ map_snowfall <- ggplot() +
   scale_fill_manual(
     values = c(
       "0" = "lightgrey",
-      "1-5" = viridisLite::viridis(5)[1],
-      "6-10" = viridisLite::viridis(5)[2],
-      "11-15" = viridisLite::viridis(5)[3],
-      "16-20" = viridisLite::viridis(5)[4],
-      "21+" = viridisLite::viridis(5)[5],
+      "1-5" = viridisLite::plasma(5)[1],
+      "6-10" = viridisLite::plasma(5)[2],
+      "11-15" = viridisLite::plasma(5)[3],
+      "16-20" = viridisLite::plasma(5)[4],
+      "21+" = viridisLite::plasma(5)[5],
       "Not calculated" = "white"
     ),
     name = "Cumulative days"
@@ -322,5 +322,5 @@ maps <-
 maps
 
 # save --------------------------------------------------------------------
-ggsave(paste0(path_map, "maps_po_singular_sw_county.png"), width = 15, height = 10, dpi = 300)
+ggsave(paste0(path_map, "maps_po_singular_sw_county.png"), width = 12, height = 8, dpi = 300)
 
