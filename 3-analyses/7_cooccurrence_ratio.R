@@ -43,7 +43,8 @@ all_po8_sw <-
 ##### data prep ---------------------------------------------------------------
 # create new variable as indicator for any sw
 all_po8_sw_single <- all_po8_sw %>%
-  mutate(i_any_sw = ifelse(cyclone + anomhot + anomcold + anomppt + snowfall + wf > 0, 1, 0))
+  mutate(i_any_sw = ifelse(cyclone + anomhot + anomcold + anomppt + snowfall + wf > 0, 1, 0),
+         no_sw = ifelse(i_any_sw == 0, 1, 0))
 
 nrow(all_po8_sw)
 ##### calculate co-occurrence ratio -------------------------------------------
@@ -53,7 +54,7 @@ nrow(all_po8_sw)
 
 # set up loop with severe weather types
 sw_types <-
-  c("cyclone", "anomhot", "anomcold", "anomppt", "snowfall", "wf")
+  c("cyclone", "anomhot", "anomcold", "anomppt", "snowfall", "wf", "no_sw")
 ratios <- data.frame()
 
 # Use a loop to iterate over the severe weather types
@@ -96,19 +97,24 @@ ratios <- ratios %>%
       sw_type == "anomcold" ~ "Anomalous Cold",
       sw_type == "anomppt" ~ "Anomalous Precipitation",
       sw_type == "snowfall" ~ "Snowfall",
-      sw_type == "wf" ~ "Wildfire"
+      sw_type == "wf" ~ "Wildfire",
+      sw_type == "no_sw" ~ "No severe weather"
     )
   ) %>%
-  arrange(sw_type) %>% 
-  mutate(ratio = round(ratio, 2),
-         sw_prop = round(sw_prop*100, 1),
-         sw_freq_prop = paste0(sw_freq, " (", sw_prop, "%)")) %>%
-  select(sw_type, sw_freq_prop, ratio) %>% 
+ # Use factor to control the order, placing "No severe weather" last
+  mutate(sw_type = factor(sw_type, levels = c("Cyclone", "Anomalous Heat", "Anomalous Cold", "Anomalous Precipitation", "Snowfall", "Wildfire", "No severe weather"))) %>%
+  arrange(sw_type) %>%
+  mutate(
+    ratio = round(ratio, 2),
+    sw_prop = round(sw_prop * 100, 1),
+    sw_freq_prop = paste0(sw_freq, " (", sw_prop, "%)")
+  ) %>%
+  select(sw_type, sw_freq_prop, ratio) %>%
   rename(
     "Severe weather type" = sw_type,
     "Count of county-days with severe weather type (%)" = sw_freq_prop,
     "Probability of 8+ hour power outage given severe weather type" = ratio
-  ) 
+  )
 
 # save
 write_csv(ratios, paste0(path_tables, "table_po_sw_ratio_single.csv"))
@@ -119,19 +125,21 @@ sw_types <-
   c("cyclone", "anomhot", "anomcold", "anomppt", "wf", "snowfall")
 
 all_po8_sw_multiple <- all_po8_sw %>%
-  mutate(i_any_sw = ifelse(cyclone + anomhot + anomcold + anomppt + snowfall + wf > 0, 1, 0)) %>%
+  mutate(i_any_sw = ifelse(cyclone + anomhot + anomcold + anomppt + snowfall + wf > 0, 1, 0),
+         no_sw = ifelse(i_any_sw == 0, 1, 0)) %>%
   mutate(tot_ind_sw = rowSums(select(., all_of(sw_types)))) %>%
-  filter(tot_ind_sw > 1) %>%
+  # filter(tot_ind_sw > 1) %>%
   mutate(across(all_of(sw_types), ~ ifelse(. == 1, as.character(sw_types[which(sw_types == cur_column())]), ""), .names = "{.col}")) %>%
-  mutate(multi_sw = paste(cyclone, anomhot, anomcold, anomppt, wf, snowfall, sep = ""))
+  mutate(multi_sw = paste(cyclone, anomhot, anomcold, anomppt, wf, snowfall, sep = ""),
+         multi_sw = ifelse(no_sw == 1, "no_sw", multi_sw))
 
 ##### calculate co-occurrence ratio -------------------------------------------
 #* do this for each weather type
-#* numerator: total number of county days with power outage and sw_i
-#* denominator: total number of county days with sw_i
+#* numerator: total number of county days with power outage and multiple sw_i
+#* denominator: total number of county days with multiple sw_i
 
-# set up loop with severe weather types
-sw_types <- c(unique(all_po8_sw_multiple$multi_sw))
+# set up loop with severe weather types, removing single weather types
+sw_types <- c(na.omit(setdiff(unique(all_po8_sw_multiple$multi_sw), c("", "NANANANANANA", "anomcold", "anomhot", "anomppt", "cyclone", "snowfall", "wf"))))
 ratios <- data.frame()
 
 # Use a loop to iterate over the severe weather types
@@ -182,19 +190,22 @@ ratios <- ratios %>%
       sw_type == "anomcoldwfsnowfall" ~ "Anomalous cold-snowfall-wildfire",
       sw_type == "cycloneanomhot" ~ "Anomalous heat-cyclone",
       sw_type == "cycloneanomhotwf" ~ "Anomalous heat-cyclone-wildfire",
-      sw_type == "anomcoldanompptwf" ~ "Anomalous cold-anomalous precipitation-wildfire"
+      sw_type == "anomcoldanompptwf" ~ "Anomalous cold-anomalous precipitation-wildfire",
+      sw_type == "no_sw" ~ "No severe weather"
     )
   ) %>%
-  mutate(ratio = round(ratio, 2),
-         sw_prop = round(sw_prop*100, 1),
-         sw_freq_prop = paste0(sw_freq, " (", sw_prop, "%)")) %>%
-  arrange(sw_type) %>%
-  select(sw_type, sw_freq_prop, ratio) %>% 
+  mutate(
+    ratio = round(ratio, 2),
+    sw_prop = round(sw_prop * 100, 1),
+    sw_freq_prop = paste0(sw_freq, " (", sw_prop, "%)")
+  ) %>%
+  arrange(match(sw_type, c(unique(sw_type)[!unique(sw_type) == "No severe weather"], "No severe weather"))) %>%
+  select(sw_type, sw_freq_prop, ratio) %>%
   rename(
-    "Multiple simultaneous severe weather type" = sw_type,
-    "Count of county-days with multiple simultaneous severe weather type (%)" = sw_freq_prop,
-    "Probability of 8+ hour power outage given multiple simultaneous severe weather type" = ratio
-  ) 
+    `Multiple simultaneous severe weather type` = sw_type,
+    `Count of county-days with multiple simultaneous severe weather type (%)` = sw_freq_prop,
+    `Probability of 8+ hour power outage given multiple simultaneous severe weather type` = ratio
+  )
 
 # save
 write_csv(ratios,
