@@ -21,12 +21,12 @@ library(tidycensus)
 library(stringr)
 library(PNWColors)
 
-path_data <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/spatial_po_severe_weather/project code/data/"
-path_map <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/spatial_po_severe_weather/project code/output/figures/"
-
+path_data_raw <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/power_outage-severe_weather-coocurrence/analysis/data/1_raw/"
+path_data_processed <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/power_outage-severe_weather-coocurrence/analysis/data/3_processed/"
+path_map <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/power_outage-severe_weather-coocurrence/analysis/output/figures/"
 
 # read in data ------------------------------------------------------------
-po8_sw_multi_sw_state_cat_scatter <- read_csv(paste0(path_data, "processed/po8_sw_multi_sw_state_cat_scatter.csv"))
+po8_sw_multi_sw_state_cat_scatter <- read_csv(paste0(path_data_processed, "multi_po_sw_4.0.csv"))
 
 # data wrangling ----------------------------------------------------------
 po8_sw_multi_sw_state_cat_scatter <- po8_sw_multi_sw_state_cat_scatter %>% 
@@ -106,19 +106,19 @@ po8_sw_multi_sw_state_cat_scatter %>%
   geom_text(aes(label = n_county_days), data = . %>% filter(multi_sw == "All Multi-SW" | clean_state_name == "All States"), size = 4) +  # increase size of numbers
   scale_size(range = c(1, 10)) +
   scale_y_discrete(limits = rev(levels(po8_sw_multi_sw_state_cat_scatter$clean_state_name))) +
-  scale_x_discrete(labels = c("cycloneanomppt" = "Cyclone,\n Anomalous\n Precipitation",
-                              "anomcoldanomppt" = "Anomalous Cold,\n  Precipitation",
-                              "anomhotanomppt" = "Anomalous Heat, \n Precipitation",
-                              "anomcoldsnowfall" = "Anomalous Cold\n Snowfall",
-                              "anompptwf" = "Wildfire,\nAnomalous \nPrecipitation",
-                              "cycloneanomhotanomppt" = "Cyclone\n Anomalous\n Heat, \n Precipitation",
-                              "anomhotwf" = "Wildfire, \n Anomalous\n Heat",
-                              "anomhotanompptwf" = "Wildfire,\n Anomalous\n Heat, \nPrecipitation",
-                              "wfsnowfall" = "Wildfire, \n Snowfall",
-                              "anomcoldwfsnowfall" = "Anomalous cold, \n Wildfire, \n Snowfall",
-                              "anomcoldwf" = "Wildfire, \n Anomalous \n Cold",
-                              "cycloneanomhot" = "Cyclone, \n Anomalous \n Heat",
-                              "All Multi-SW" = "Any severe \nweather event"),
+  scale_x_discrete(labels = c("cycloneanomppt" = "Tropical Cyclone,\nAnomalous\n Precipitation",
+                              "anomcoldanomppt" = "Anomalous Cold,\nPrecipitation",
+                              "anomhotanomppt" = "Anomalous Heat,\nPrecipitation",
+                              "anomcoldsnowfall" = "Anomalous Cold,\nSnowfall",
+                              "anompptwf" = "Wildfire,\nAnomalous\nPrecipitation",
+                              "cycloneanomhotanomppt" = "Tropical Cyclone\nAnomalous\n Heat,\nPrecipitation",
+                              "anomhotwf" = "Wildfire,\nAnomalous\nHeat",
+                              "anomhotanompptwf" = "Wildfire,\nAnomalous\nHeat,\nPrecipitation",
+                              "wfsnowfall" = "Wildfire,\nSnowfall",
+                              "anomcoldwfsnowfall" = "Anomalous cold,\nWildfire,\nSnowfall",
+                              "anomcoldwf" = "Wildfire,\nAnomalous\nCold",
+                              "cycloneanomhot" = "Tropical Cyclone,\n Anomalous\n Heat",
+                              "All Multi-SW" = "Any severe\nweather event"),
                    limits = (levels(po8_sw_multi_sw_state_cat_scatter$multi_sw))) +
   theme_minimal() +
   xlab("") +
@@ -131,7 +131,7 @@ po8_sw_multi_sw_state_cat_scatter %>%
   guides(size = guide_legend(title = "Total county-days"))
 
 
-ggsave(paste0(path_map, "cat_scatter_state_multisw.png"), width = 15, height = 10, dpi = 300)
+ggsave(paste0(path_map, "scatter_cty_tot_po_sw_4.0.png"), width = 15, height = 10, dpi = 300)
 
 
 

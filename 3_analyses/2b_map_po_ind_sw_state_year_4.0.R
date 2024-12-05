@@ -2,6 +2,7 @@
 #* Author: Vivian
 #* Date: 04/02/2024
 #* Goal: create maps of po and cumulative severe weather
+#* Figure 2
 
 # set up ------------------------------------------------------------------
 rm(list=ls(all=TRUE))
@@ -17,11 +18,12 @@ library(patchwork)
 library(MetBrewer)
 library(geofacet)
 
-path_data <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/spatial_po_severe_weather/project code/data/"
-path_map <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/spatial_po_severe_weather/project code/output/figures/"
+path_data_raw <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/power_outage-severe_weather-coocurrence/analysis/data/1_raw/"
+path_data_processed <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/power_outage-severe_weather-coocurrence/analysis/data/3_processed/"
+path_map <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/power_outage-severe_weather-coocurrence/analysis/output/figures/"
 
 # read in data ------------------------------------------------------------
-po8_sw_state_year <- read_csv(paste0(path_data, "processed/po8_sw_state_year.csv"))
+po8_sw_state_year <- read_csv(paste0(path_data_processed, "po8_sw_state_year_4.0.csv"))
 
 glimpse(po8_sw_state_year)
 po8_sw_state_year_test <- po8_sw_state_year %>% 
@@ -68,7 +70,7 @@ met.brewer("Archambault", 5)[2]
 met.brewer("Archambault", 5)[3]
 
 # map
-ggplot(po8_sw_state_year_prop, aes(x = year, y = prop_days, fill = sw_type)) +
+map_po_ind_sw_state_year_4.0 <- ggplot(po8_sw_state_year_prop, aes(x = year, y = prop_days, fill = sw_type)) +
   geom_bar(stat = "identity") +
   theme_minimal() +
   theme(legend.position = "bottom",
@@ -89,7 +91,7 @@ ggplot(po8_sw_state_year_prop, aes(x = year, y = prop_days, fill = sw_type)) +
       "anomcold" = "Anomalous Cold",
       "anomhot" = "Anomalous Hot",
       "anomppt" = "Anomalous Precipitation",
-      "cyc" = "Cyclone",
+      "cyc" = "Tropical Cyclone",
       "snowfall" = "Snowfall",
       "wf" = "Wildfire"
     ),
@@ -102,7 +104,7 @@ ggplot(po8_sw_state_year_prop, aes(x = year, y = prop_days, fill = sw_type)) +
 
 
 # save --------------------------------------------------------------------
-ggsave(paste0(path_map, "maps_po_sw_state_year_prop.png"), width = 15, height = 10, dpi = 300)
+ggsave(paste0(path_map, "sfig2_map_po8_sw_state_year_4.0.tiff"), map_po_ind_sw_state_year_4.0, width = 15, height = 10, dpi = 300)
 
 
 # Eval: get numbers from ppo8_sw_tot_days_singularo8_sw_state_year_prop ---------------------------------

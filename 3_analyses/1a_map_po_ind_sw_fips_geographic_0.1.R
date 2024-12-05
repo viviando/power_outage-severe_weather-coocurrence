@@ -2,6 +2,7 @@
 #* Author: Vivian
 #* Date: 03/20/2024
 #* Goal: create maps of po and singular severe weather 
+#* Figure 1
 
 # set up ------------------------------------------------------------------
 rm(list=ls(all=TRUE))
@@ -19,32 +20,32 @@ library(tidycensus)
 library(stringr)
 library(PNWColors)
 
-path_data <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/spatial_po_severe_weather/project code/data/"
-path_map <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/spatial_po_severe_weather/project code/output/figures/"
-
+path_data_raw <- "/Users/vivian/Desktop/0_PhD/0_lead_research-projects/power_outage-severe_weather-coocurrence/analysis/data/1_raw/"
+path_data_processed <- "/Users/vivian/Desktop/0_PhD/0_lead_research-projects/power_outage-severe_weather-coocurrence/analysis/data/3_processed/"
+path_map <- "/Users/vivian/Desktop/0_PhD/0_lead_research-projects/power_outage-severe_weather-coocurrence/analysis/output/figures/"
+path_public_data <- "/Users/vivian/Desktop/0_PhD/0_lead_research-projects/power_outage-severe_weather-coocurrence/analysis/output/public_data/"
 
 # read in data ------------------------------------------------------------
-po8_sw_county <- read_csv(paste0(path_data, "processed/po8_sw_county_w_labels.csv")) %>% 
-  mutate(label_tot_days_cyc = as.character(label_tot_days_cyc))
+po8_sw_county <- read_csv(paste0(path_data_processed, "cty_days_sw_po_labeled_0.1.csv")) %>% 
+  mutate(label_tot_days_cyc = as.character(label_tot_days_cyc)) %>% 
+  filter(!is.na(label_tot_days_cyc)) # only keep study counties (if any label_tot_days_* is NA, then the rest are NA. Just chose cyclone)
 glimpse(po8_sw_county)
 
 # prep data for mapping ---------------------------------------------------
 
-# Set your Census Bureau API key
-census_api_key("ffd4ebcb77514076a4f60ebe2081882d7922cf98", install = TRUE, overwrite=TRUE)
-
-# US states, convert to albers equal area
-us_states <- get_acs(geography = "state", variables = "B01003_001", 
-                     year = 2018, geometry = TRUE) %>% 
-  filter(!NAME %in% c("Alaska", "Hawaii", "Puerto Rico"))
-
+# US state map 2018, convert to albers equal area
+us_states <- st_read(paste0(path_data_raw, "nhgis0049_state_2018/US_state_2018.shp")) %>% 
+  filter(!STUSPS %in% c("AK", "HI", "PR"))
 us_states <- st_transform(us_states, crs = 2163)
 
-# US counties, convert to albers equal area, keep only study counties
-us_counties <- get_acs(geography = "county", variables = "B01003_001", 
-                       year = 2018, geometry = TRUE) %>% 
-  filter(!str_detect(NAME, "Alaska|Hawaii|Puerto Rico"))
+state_fip <- us_states %>% 
+  select(STATEFP, STUSPS) %>% 
+  st_drop_geometry()
 
+# US counties map 2018, convert to albers equal area
+us_counties <- st_read(paste0(path_data_raw, "nhgis0047_county_2018/US_county_2018.shp")) %>% 
+  left_join(., state_fip, by = c("STATEFP")) %>% 
+  filter(!STUSPS %in% c("AK", "HI", "PR"))
 us_counties <- st_transform(us_counties, crs = 2163)
 
 # join us_counties with po_sw data
@@ -60,6 +61,14 @@ us_counties <- us_counties %>%
     by = c("GEOID" = "fips")
   )
 
+# save output for public data
+write_fst(
+  us_counties %>% select(GEOID, contains("label")) %>% st_drop_geometry(),
+  paste0(
+    path_public_data,
+    "us_counties_cty_days_sw_po_labeled_0.1.fst"
+  )
+)
 
 # make maps by severe weather type ---------------------------------------------------------------
 
@@ -94,7 +103,7 @@ map_cyc <- ggplot() +
   coord_sf(crs = st_crs(2163)) +
   theme(legend.position = "none") +
   labs(x = "", y = "") +
-  ggtitle("Cyclone") +
+  ggtitle("Tropical Cyclone") +
   theme(plot.title.position = "plot",  
         plot.title = element_text(hjust = 0.5),
         text = element_text(size = 14)) 
@@ -319,8 +328,8 @@ maps <-
   (map_anomheat / map_cyc / map_wf) | 
   (map_anomcold / map_anomppt / map_snowfall) 
 
-maps
+# maps
 
 # save --------------------------------------------------------------------
-ggsave(paste0(path_map, "maps_po_singular_sw_county.png"), width = 12, height = 8, dpi = 300)
+ggsave(paste0(path_map, "fig1_maps_cty_days_sw_po_labeled_0.1.tiff"), width = 12, height = 8, dpi = 300)
 
