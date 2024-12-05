@@ -21,23 +21,18 @@ library(tidycensus)
 library(stringr)
 library(PNWColors)
 
-path_data <-
-  "/Users/vivian/Desktop/0_PhD/0_Research Projects/spatial_po_severe_weather/project code/data/"
-path_map <-
-  "/Users/vivian/Desktop/0_PhD/0_Research Projects/spatial_po_severe_weather/project code/output/figures/"
-path_tables <-
-  "/Users/vivian/Desktop/0_PhD/0_Research Projects/spatial_po_severe_weather/project code/output/tables/"
+path_data_raw <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/power_outage-severe_weather-coocurrence/analysis/data/1_raw/"
+path_data_processed <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/power_outage-severe_weather-coocurrence/analysis/data/3_processed/"
+path_map <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/power_outage-severe_weather-coocurrence/analysis/output/figures/"
+path_tables <- "/Users/vivian/Desktop/0_PhD/0_Research Projects/power_outage-severe_weather-coocurrence/analysis/output/tables/"
+
 
 # read in data ------------------------------------------------------------
 #* data should be reliable counties with all days regardless of severe weather or power outage
-all_po8_sw <-
-  read_csv(
-    paste0(
-      path_data,
-      "processed/reliable_counties_w_all_days_regardless_of_sw_po.csv"
-    )
-  )
-
+#* filter to one power outage threshold
+all_po8_sw <- read_csv(paste0(path_data_processed, "/po8_sw_reliable.csv")) %>% 
+  select(-i_exp_0.1, -i_exp_4.0) %>% 
+  rename(i_po8 = i_exp_2.5)
 
 # Co-occurrence ratio for single severe weather ---------------------------
 ##### data prep ---------------------------------------------------------------
@@ -178,9 +173,9 @@ ratios <- ratios %>%
   mutate(
     sw_type = case_when(
       sw_type == "anomcoldsnowfall" ~ "Anomalous cold-snowfall",
-      sw_type == "cycloneanomppt" ~ "Anomalous precipitation-cyclone",
+      sw_type == "cycloneanomppt" ~ "Anomalous precipitation-tropical cyclone",
       sw_type == "anomhotanomppt" ~ "Anomalous heat-anomalous precipitation",
-      sw_type == "cycloneanomhotanomppt" ~ "Anomalous heat-anomalous precipitation-cyclone",
+      sw_type == "cycloneanomhotanomppt" ~ "Anomalous heat-anomalous precipitation-tropical cyclone",
       sw_type == "anompptwf" ~ "Anomalous precipitation-wildfire",
       sw_type == "anomhotwf" ~ "Anomalous heat-wildfire",
       sw_type == "anomcoldanomppt" ~ "Anomalous cold-anomalous precipitation",
@@ -188,8 +183,8 @@ ratios <- ratios %>%
       sw_type == "wfsnowfall" ~ "Snowfall-wildfire",
       sw_type == "anomhotanompptwf" ~ "Anomalous heat-anomalous precipitation",
       sw_type == "anomcoldwfsnowfall" ~ "Anomalous cold-snowfall-wildfire",
-      sw_type == "cycloneanomhot" ~ "Anomalous heat-cyclone",
-      sw_type == "cycloneanomhotwf" ~ "Anomalous heat-cyclone-wildfire",
+      sw_type == "cycloneanomhot" ~ "Anomalous heat-tropical cyclone",
+      sw_type == "cycloneanomhotwf" ~ "Anomalous heat-tropical cyclone-wildfire",
       sw_type == "anomcoldanompptwf" ~ "Anomalous cold-anomalous precipitation-wildfire",
       sw_type == "no_sw" ~ "No severe weather"
     )
@@ -209,4 +204,4 @@ ratios <- ratios %>%
 
 # save
 write_csv(ratios,
-          paste0(path_tables, "table_po_sw_ratio_multiple.csv"))
+          paste0(path_tables, "table_po_sw_ratio_multiple_2.5.csv"))
